@@ -11,7 +11,6 @@ namespace CryptoBoX
 {
     class FileEncrypter
     {
-        
         private string source;
         private string target;
         private byte[] key;
@@ -52,31 +51,21 @@ namespace CryptoBoX
 
                 ICryptoTransform encryptor = rijAlg.CreateEncryptor(key, iV);
 
-                    using (CryptoStream csEncrypt = new CryptoStream(outStream, encryptor, CryptoStreamMode.Write))
+                using (CryptoStream csEncrypt = new CryptoStream(outStream, encryptor, CryptoStreamMode.Write))
+                {
+                    while ((bytesRead = inStream.Read(bytes, 0, bufferSize)) > 0)
                     {
-                        while ((bytesRead = inStream.Read(bytes, 0, bufferSize)) > 0)
+                        csEncrypt.Write(bytes, 0, bytesRead);
+                        totalReads += bytesRead;
+                        int percent = System.Convert.ToInt32(((decimal)totalReads / (decimal)totalBytes) * 100);
+                        if (percent != prevPercent)
                         {
-                            csEncrypt.Write(bytes, 0, bytesRead);
-                            totalReads += bytesRead;
-                            int percent = System.Convert.ToInt32(((decimal)totalReads / (decimal)totalBytes) * 100);
-                            if (percent != prevPercent)
-                            {
-                                worker.ReportProgress(percent);
-                                prevPercent = percent;
-                            }
+                            worker.ReportProgress(percent);
+                            prevPercent = percent;
                         }
-                    
-                        
+                    }
                 }
 
-
-
-                //byte[] fileBytes = FileToByteArray(inputFile);
-                // byte[] crypByte = enc.EncryptBytes(fileBytes, key, iV);
-                // File.WriteAllBytes(outputFile, fileBytes);
-                //FileStream fsOut = new FileStream(outputFile, FileMode.Create);
-                //fsOut.Write(crypByte,0,crypByte.Length);
-                //fsOut.Close();
             }
 
         }
@@ -115,17 +104,6 @@ namespace CryptoBoX
             }
         }
 
-        //public byte[] FileToByteArray(string fileName)
-        //{
-        //    byte[] buff = null;
-        //    FileStream fs = new FileStream(fileName,
-        //                                   FileMode.Open,
-        //                                   FileAccess.Read);
-        //    BinaryReader br = new BinaryReader(fs);
-        //    long numBytes = new FileInfo(fileName).Length;
-        //    buff = br.ReadBytes((int)numBytes);
-        //    return buff;
-        //}
         public event ProgressChangedEventHandler ProgressChanged
         {
             add { worker.ProgressChanged += value; }

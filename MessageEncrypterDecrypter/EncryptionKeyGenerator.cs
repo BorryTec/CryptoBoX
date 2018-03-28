@@ -8,35 +8,12 @@ using Crypto;
 
 namespace CryptoBoX
 {
-    class EncryptionKeyGenerator : IDisposable
+    class EncryptionKeyGenerator 
     {
         private string salt = string.Empty;
         bool disposed = false;
-        SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
 
         public string Salt { get => salt; set => salt = value; }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposed)
-                return;
-
-            if (disposing)
-            {
-                handle.Dispose();
-                // Free any other managed objects here.
-                //
-            }
-
-            // Free any unmanaged objects here.
-            //
-            disposed = true;
-        }
 
         public void GenerateKey(string password, out byte[] key, out byte[]iV)
         {
