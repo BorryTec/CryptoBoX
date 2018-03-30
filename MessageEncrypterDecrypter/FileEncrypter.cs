@@ -90,9 +90,9 @@ namespace CryptoBoX
                             prevPercent = percent;
                         }
                     }
-               
+                    AValue = "Cleaning";
                 }
-      
+
             }
 
             WipeFile wipe = new WipeFile();
@@ -100,7 +100,7 @@ namespace CryptoBoX
             tmp[0] = Path.GetDirectoryName(target) + "\\comp";
             //wipe.WipeErrorEvent += Wipe_WipeErrorEvent;
             //wipe.PassInfoEvent += Wipe_PassInfoEvent;
-            //wipe.SectorInfoEvent += Wipe_SectorInfoEvent;
+            wipe.SectorInfoEvent += Wipe_SectorInfoEvent;
             wipe.SecureDelete(tmp, 3);
       
 
@@ -109,6 +109,8 @@ namespace CryptoBoX
 
         private void Wipe_SectorInfoEvent(SectorInfoEventArgs e)
         {
+            int percent = System.Convert.ToInt32(((decimal)e.CurrentSector / (decimal)e.TotalSectors) * 100);
+            worker.ReportProgress(percent);
         }
 
         private void Wipe_PassInfoEvent(PassInfoEventArgs e)
