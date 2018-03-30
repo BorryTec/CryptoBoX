@@ -21,7 +21,21 @@ namespace CryptoBoX
         string[] filePaths;
         string folderPath;
         string saveName;
+        string currentProcess;
+        string tmp;
         bool encrypt;
+        bool wipeOnClose;
+
+
+        #region WipeFileEventFields
+        string fName;
+        int cPass;
+        int tPass;
+        int fSectors;
+        int fNum;
+        int fArrayNum; 
+        #endregion
+
 
         public FileEncrypterForm()
         {
@@ -30,7 +44,10 @@ namespace CryptoBoX
             decrypt_Button.Text = "Decrypt";
             label1.Text = "";
             password = "";
+            wipeOnClose = false;
         }
+
+
         //Compression and Encryption
         private void button1_Click(object sender, EventArgs e)
         {
@@ -58,13 +75,18 @@ namespace CryptoBoX
                             CompressFolder compress = new CompressFolder(filePaths, folderPath + "\\comp", CompressionOption.Compress);
                             compress.ProgressChanged += CopyProgressChanged;
                             compress.Completed += CompressCompleted;
+                            compress.PropertyChanged += PropertyChanged;                         
                             compress.StartCompression();
                             encrypt = true;
-                            label1.Text = "Creating Archive";
                         }
                     }
                 }
             }
+        }
+
+        void PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+           currentProcess = e.PropertyName;
         }
 
         private void CompressCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -74,16 +96,17 @@ namespace CryptoBoX
                 progressBar1.Value = 0;
                 FileEncrypter copy = new FileEncrypter(folderPath + "\\comp", Path.Combine(folderPath, saveName), loadedKey, loadedIV, true);
                 copy.Completed += EncryptCompleted;
+                copy.PropertyChanged += PropertyChanged;
                 copy.ProgressChanged += CopyProgressChanged;
                 copy.StartEncrypt();
-                label1.Text = "Encrypting Archive";
+                //label1.Text = "Encrypting Archive";
             }
             if (!encrypt)
             {
                 File.Delete(folderPath + "\\file.dec");
                 progressBar1.Value = 0;
                 label1.Text = "";
-                MessageBox.Show("Finished");
+                MessageBox.Show("Finished", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             }
         }
@@ -92,9 +115,9 @@ namespace CryptoBoX
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
-            EncryptionKeyGenerator newKey = new EncryptionKeyGenerator();              
-                    password = textBox1.Text;
-                    newKey.GenerateKey(password, out loadedKey, out loadedIV);                      
+            EncryptionKeyGenerator newKey = new EncryptionKeyGenerator();
+            password = textBox1.Text;
+            newKey.GenerateKey(password, out loadedKey, out loadedIV);
         }
 
 
@@ -105,31 +128,34 @@ namespace CryptoBoX
             BackgroundWorker worker = sender as BackgroundWorker;
             worker.Dispose();
             if (encrypt)
-            {
+            { 
+            WipeFile wipe = new WipeFile();
+            //wipe.SecureDelete(folderPath + "\\comp", 1);
+           // wipe.WipeErrorEvent += Wipe_WipeErrorEvent;
+           // wipe.PassInfoEvent += Wipe_PassInfoEvent;
+            //wipe.SectorInfoEvent += Wipe_SectorInfoEvent;
 
-                File.Delete(folderPath + " \\comp");
-                this.BringToFront();
+            //File.Delete(folderPath + " \\comp");
+            this.BringToFront();
                 progressBar1.Value = 0;
-                label1.Text = "";
+                currentProcess = "";
                 MessageBox.Show("Finished", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-
             }
             if (!encrypt)
             {
-                using (CompressFolder compress = new CompressFolder(filePaths, folderPath, CompressionOption.Decompress))
-                {
-                    compress.ProgressChanged += CopyProgressChanged;
-                    compress.Completed += CompressCompleted;
-                    compress.StartCompression();
-                    label1.Text = "Unpacking Archive";
-                }
+                CompressFolder compress = new CompressFolder(filePaths, folderPath, CompressionOption.Decompress);
+                compress.ProgressChanged += CopyProgressChanged;
+                compress.PropertyChanged += PropertyChanged;
+                compress.Completed += CompressCompleted;
+                compress.StartCompression();
+                //label1.Text = "Unpacking";
             }
             // do something
         }
 
         private void CopyProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
         {
+            label1.Text = currentProcess;
             // change progress bar or whatever
             if (e.ProgressPercentage >= 0)
                 progressBar1.Value = e.ProgressPercentage;
@@ -164,23 +190,71 @@ namespace CryptoBoX
                         {
                             encrypt = false;
                             folderPath = folderDialog.SelectedPath;
-
                             filePaths = openDialog.FileNames;
                             FileEncrypter copy = new FileEncrypter(filePaths[0], folderPath + "\\file.dec", loadedKey, loadedIV, encrypt);
                             copy.Completed += EncryptCompleted;
                             copy.ProgressChanged += CopyProgressChanged;
+                            copy.PropertyChanged += PropertyChanged;
                             copy.StartEncrypt();
                             label1.Text = "Decrypting Archive";
                         }
-
                     }
                 }
+            }
+        }
+        private void FileEncrypterForm_Load(object sender, EventArgs e)
+        {
+        }
 
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            wipeOnClose = checkBox1.Checked;
+        }
+
+        private void toolTip1_Popup(object sender, PopupEventArgs e)
+        {
+
+        }
+
+        private void FileEncrypterForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if(wipeOnClose)
+            {
+                currentProcess = "Wiping Decrypred Files";
+                string[] lastDecryptedBatch = Directory.GetFiles(folderPath);
+                WipeFile wipe = new WipeFile();
+                wipe.PassInfoEvent += Wipe_PassInfoEvent;
+                wipe.FileStatusEvent += Wipe_FileStatusEvent;
+                wipe.WipeDoneEvent += Wipe_WipeDoneEvent;
+                wipe.SecureDelete(lastDecryptedBatch, 3);
             }
 
+        }
 
+        private void Wipe_WipeDoneEvent(WipeDoneEventArgs e)
+        {
+            Application.Exit();
+        }
 
+        private void Wipe_FileStatusEvent(FileStatusEventArgs e)
+        {
+            fName = e.FileName;
+            fNum = e.FileArrayPos;
+            fArrayNum = e.FileAraySize;
+        }
 
+        private void Wipe_PassInfoEvent(PassInfoEventArgs e)
+        {
+            cPass = e.CurrentPass;
+            tPass = e.TotalPasses;
+            currentProcess = "Deleting File " + fNum.ToString() + " of " + fArrayNum.ToString() + " pass " + cPass.ToString() + " of " + tPass.ToString();
+            label1.Text = currentProcess;
+            label1.Refresh();
+        }
+
+        private void label1_TextChanged(object sender, EventArgs e)
+        {
+           
         }
     }
 }

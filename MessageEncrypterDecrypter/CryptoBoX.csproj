@@ -66,6 +66,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -107,6 +108,8 @@
     <Compile Include="LoadKey.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ValueChangedEventArgs.cs" />
+    <Compile Include="WipeFile.cs" />
     <EmbeddedResource Include="FileEncrypterForm.resx">
       <DependentUpon>FileEncrypterForm.cs</DependentUpon>
     </EmbeddedResource>
