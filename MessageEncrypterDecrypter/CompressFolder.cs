@@ -124,8 +124,12 @@ namespace CryptoBoX
                     }
                 }
             }
-            File.Delete(_outPath + ".arc");
+            WipeFile wipe = new WipeFile();
+            AValue = "Cleaning";
+            wipe.SecureDelete(_outPath + ".arc",3);
         }
+
+  
 
         public void StartDecompression(object sender, DoWorkEventArgs e)
         {
@@ -169,6 +173,7 @@ namespace CryptoBoX
                 foreach (var item in entries)
                 {
                     item.ExtractToFile(Path.Combine(_outPath, item.FullName));
+                  
                     processed++;
                     int percent = System.Convert.ToInt32(((decimal)processed / (decimal)fileCount) * 100);
                     if (percent != prevPercent)
@@ -179,18 +184,9 @@ namespace CryptoBoX
                     }
                 }
             }
-            File.Delete(_outPath + "\\comp.arc");
-
-            //ZipForge archive = new ZipForge();
-
-
-            //archive.FileName = _outPath + "\\file.dec";
-            //archive.OpenArchive(FileMode.OpenOrCreate);
-            //archive.BaseDir = _outPath;
-            //archive.ExtractFiles("*.*");
-
-
-            //archive.CloseArchive();
+            WipeFile wipe = new WipeFile();
+            AValue = "Cleaning";
+            wipe.SecureDelete(_outPath + "\\comp.arc", 3);    
         }
 
         public event ProgressChangedEventHandler ProgressChanged

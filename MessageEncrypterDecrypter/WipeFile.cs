@@ -15,8 +15,16 @@ namespace CryptoBoX
         {
             try
             {
+                string[] renamed = new string[fileNames.Length];
+                for (int i = 0; i < fileNames.Length; i++)
+                {
+                    string newName = Path.GetDirectoryName(fileNames[i]) +"\\"+ i;            
+                    File.Move(fileNames[i], newName);
+                    renamed[i] = newName;
+                }
                 int fileNum = 0;
-                foreach (var file in fileNames)
+
+                foreach (var file in renamed)
                 {
                     if (File.Exists(file))
                     {
@@ -78,6 +86,7 @@ namespace CryptoBoX
                         // original dates are hidden if you try to recover the file.
 
                         DateTime dt = new DateTime(2037, 1, 1, 0, 0, 0);
+                    
                         File.SetCreationTime(file, dt);
                         File.SetLastAccessTime(file, dt);
                         File.SetLastWriteTime(file, dt);
@@ -99,6 +108,96 @@ namespace CryptoBoX
                     WipeError(e);
             }
         }
+        public void SecureDelete(string fileName, int timesToWrite)
+        {
+            try
+            {
+   
+                    string newName = Path.GetDirectoryName(fileName) +"\\"+ 1;
+                    File.Move(fileName, newName);
+                    fileName = newName;
+                
+                    if (File.Exists(fileName))
+                    {
+                        if (FileStatusEvent != null)
+                           // UpdateFileStatus(fileName, fileNum, fileNames.Length);
+                        // Set the files attributes to normal in case it's read-only.
+
+                        File.SetAttributes(fileName, FileAttributes.Normal);
+
+                        // Calculate the total number of sectors in the file.
+                        double sectors = Math.Ceiling(new FileInfo(fileName).Length / 512.0);
+
+                        // Create a dummy-buffer the size of a sector.
+
+                        byte[] dummyBuffer = new byte[512];
+
+                        // Create a cryptographic Random Number Generator.
+                        // This is what I use to create the garbage data.
+
+                        RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
+
+                        // Open a FileStream to the file.
+                        FileStream inputStream = new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite);
+                        for (int currentPass = 0; currentPass < timesToWrite; currentPass++)
+                        {
+                            if (PassInfoEvent != null)
+                                UpdatePassInfo(currentPass + 1, timesToWrite);
+
+                            // Go to the beginning of the stream
+
+                            inputStream.Position = 0;
+
+                            // Loop all sectors
+                            for (int sectorsWritten = 0; sectorsWritten < sectors; sectorsWritten++)
+                            {
+                                if (SectorInfoEvent != null)
+                                    UpdateSectorInfo(sectorsWritten + 1, (int)sectors);
+
+                                // Fill the dummy-buffer with random data
+
+                                rng.GetBytes(dummyBuffer);
+
+                                // Write it to the stream
+                                inputStream.Write(dummyBuffer, 0, dummyBuffer.Length);
+                            }
+                        }
+
+                        // Truncate the file to 0 bytes.
+                        // This will hide the original file-length if you try to recover the file.
+
+                        inputStream.SetLength(0);
+
+                        // Close the stream.
+                        inputStream.Close();
+
+                        // As an extra precaution I change the dates of the file so the
+                        // original dates are hidden if you try to recover the file.
+
+                        DateTime dt = new DateTime(2037, 1, 1, 0, 0, 0);
+
+                        File.SetCreationTime(fileName, dt);
+                        File.SetLastAccessTime(fileName, dt);
+                        File.SetLastWriteTime(fileName, dt);
+
+                        // Finally, delete the file
+
+                        File.Delete(fileName);
+                    }
+                
+
+
+                if (WipeDoneEvent != null)
+                    WipeDone();
+
+            }
+            catch (Exception e)
+            {
+                if (WipeErrorEvent != null)
+                    WipeError(e);
+            }
+        }
+
         #region Events
         public event PassInfoEventHandler PassInfoEvent;
         private void UpdatePassInfo(int currentPass, int totalPasses)

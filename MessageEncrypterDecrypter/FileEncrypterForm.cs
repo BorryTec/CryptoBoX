@@ -103,6 +103,11 @@ namespace CryptoBoX
             }
             if (!encrypt)
             {
+                WipeFile wipe = new WipeFile();
+                wipe.FileStatusEvent += Wipe_FileStatusEvent;
+                wipe.PassInfoEvent += Wipe_PassInfoEvent;
+                wipe.SectorInfoEvent += Wipe_SectorInfoEvent;
+                wipe.SecureDelete(folderPath + "\\file.dec",2);
                 File.Delete(folderPath + "\\file.dec");
                 progressBar1.Value = 0;
                 label1.Text = "";
@@ -110,6 +115,13 @@ namespace CryptoBoX
 
             }
         }
+
+
+
+   
+
+
+
         /********************************************/
 
 
@@ -225,6 +237,7 @@ namespace CryptoBoX
                 WipeFile wipe = new WipeFile();
                 wipe.PassInfoEvent += Wipe_PassInfoEvent;
                 wipe.FileStatusEvent += Wipe_FileStatusEvent;
+                wipe.SectorInfoEvent += Wipe_SectorInfoEvent;
                 wipe.WipeDoneEvent += Wipe_WipeDoneEvent;
                 wipe.SecureDelete(lastDecryptedBatch, 3);
             }
@@ -250,6 +263,12 @@ namespace CryptoBoX
             currentProcess = "Deleting File " + fNum.ToString() + " of " + fArrayNum.ToString() + " pass " + cPass.ToString() + " of " + tPass.ToString();
             label1.Text = currentProcess;
             label1.Refresh();
+        }
+
+        private void Wipe_SectorInfoEvent(SectorInfoEventArgs e)
+        {
+            int percent = System.Convert.ToInt32(((decimal)e.CurrentSector / (decimal)e.TotalSectors) * 100);
+            progressBar1.Value = percent;
         }
 
         private void label1_TextChanged(object sender, EventArgs e)
