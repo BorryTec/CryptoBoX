@@ -90,11 +90,11 @@ namespace CryptoBoX
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
-            using (EncryptionKeyGenerator newKey = new EncryptionKeyGenerator())
-            {
+            EncryptionKeyGenerator newKey = new EncryptionKeyGenerator();
+            
                 password = textBox1.Text;
                 newKey.GenerateKey(password, out loadedKey, out loadedIV);
-            }
+            
         }
 
   
@@ -135,6 +135,11 @@ namespace CryptoBoX
         private void textBox2_TextChanged(object sender, EventArgs e)
         {
             textbox = textBox2.Text;
+        }
+
+        private void CryptoBoX_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            Application.Exit();
         }
     }
 }

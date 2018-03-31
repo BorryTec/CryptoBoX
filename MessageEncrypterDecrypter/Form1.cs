@@ -28,6 +28,7 @@ namespace CryptoBoX
             FileEncrypterForm enc = new FileEncrypterForm();
             enc.Show();
             enc.BringToFront();
+            this.Hide();
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -35,6 +36,7 @@ namespace CryptoBoX
             CryptoBoX cb = new CryptoBoX();
             cb.Show();
             cb.BringToFront();
+            this.Hide();
         }
     }
 }
