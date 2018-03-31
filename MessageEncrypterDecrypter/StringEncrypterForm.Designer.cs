@@ -112,6 +112,7 @@
             this.Name = "CryptoBoX";
             this.Text = "CryptoBoX";
             this.TransparencyKey = System.Drawing.SystemColors.ActiveBorder;
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.CryptoBoX_FormClosed);
             this.Load += new System.EventHandler(this.CryptoBoX_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

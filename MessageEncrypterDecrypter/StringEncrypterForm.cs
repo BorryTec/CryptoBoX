@@ -136,6 +136,11 @@ namespace CryptoBoX
         {
             textbox = textBox2.Text;
         }
+
+        private void CryptoBoX_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            Application.Exit();
+        }
     }
 }
 

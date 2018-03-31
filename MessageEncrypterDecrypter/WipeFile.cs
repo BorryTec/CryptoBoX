@@ -11,14 +11,14 @@ namespace CryptoBoX
 {
     class WipeFile
     {
-        public void SecureDelete(string[] fileNames, int timesToWrite)
+        public void SecureDelete(string[] fileNames, int timesToWrite, string filter = ".enc")
         {
             try
             {
                 string[] renamed = new string[fileNames.Length];
                 for (int i = 0; i < fileNames.Length; i++)
                 {
-                    if (Path.GetExtension(fileNames[i]) != ".enc")
+                    if (Path.GetExtension(fileNames[i]) != filter)
                     {
                         string newName = Path.GetDirectoryName(fileNames[i]) + "\\" + i;
                         File.Move(fileNames[i], newName);
@@ -29,7 +29,7 @@ namespace CryptoBoX
 
                 foreach (var file in renamed)
                 {
-                    if (File.Exists(file) && Path.GetExtension(file) != ".enc")
+                    if (File.Exists(file) && Path.GetExtension(file) != filter)
                     {
                         fileNum++;
                         string fileName = Path.GetFileName(file);
@@ -123,7 +123,7 @@ namespace CryptoBoX
                 if (File.Exists(fileName))
                 {
                     if (FileStatusEvent != null)
-                        // UpdateFileStatus(fileName, fileNum, fileNames.Length);
+                        UpdateFileStatus(fileName, 1, 1);
                         // Set the files attributes to normal in case it's read-only.
 
                         File.SetAttributes(fileName, FileAttributes.Normal);
